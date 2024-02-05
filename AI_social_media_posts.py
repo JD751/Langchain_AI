@@ -3,11 +3,11 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 
-# Load API Key
+# Loading API Key
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-# Initialize the language model
+# Initializing the language model
 llm = ChatOpenAI(openai_api_key=api_key, max_tokens=100, temperature=0.8)
 
 # %%
@@ -59,22 +59,17 @@ def extract_section_from_pdf(pdf_path, start_page, end_page):
 # File to store current page number
 current_page_file = 'current_page.txt'
 
-# Get the current page and update it for the next run
+# Getting the current page and update it for the next run
 start_page, next_start_page = get_and_update_current_page(current_page_file)
 
 book= "CPTSD.pdf"
 
-# Extract text from today's section
+# Extracting text from a particular section
 pdf_text = extract_section_from_pdf(book, start_page, next_start_page)
 
-# Invoke the chain with your query
+# Invoking the chain with our query
 response = chain.invoke({"input": "write a 20 words inspirational quote for a person suffering from cptsd that would heal them, from the following text" + pdf_text})
 
-# Print the response
-print(response)
-#print(pdf_text)
-
-quote=response
 
 # %%
 from langchain.chains import LLMChain
@@ -82,30 +77,30 @@ from langchain.prompts import PromptTemplate
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_openai import OpenAI
 
-# Assuming 'response' is defined somewhere above
+# equating quote to the AI response
 quote = response
 print(quote)
 llm = OpenAI(temperature=1.0)
 
-# Define your prompt template outside of the retry loop
+# Defining the prompt template for creation of the prompt that would be inserted into DALLE
 prompt_template = PromptTemplate(
     input_variables=["quote"],
     template="Create an inspiring, hopeful, and positive image for instagram without including any text in the image, also do not include any human beings, just make it therapeutic and full of nature image: {quote}",
 )
 
 max_length = 1000
-max_retries = 3  # Set the maximum number of retries
+max_retries = 3  # Setting the maximum number of retries to 3
 attempt = 0
 
-while attempt < max_retries:
+while attempt < max_retries: # This loop is to handle the error in case DALLE is fed a prompt that does not meet the guidelines
     try:
-        # Create a chain with the LLM and the prompt template
+        
         chain = LLMChain(llm=llm, prompt=prompt_template)
 
-        # Create a dictionary with the quote variable
+        
         input_data = {"quote": quote}
 
-        # Generate the prompt using the chain
+        
         prompt = chain.run(input_data)
         print(prompt)
 
@@ -114,7 +109,7 @@ while attempt < max_retries:
 
         print(len(prompt))
         
-        # Attempt to generate the image URL
+        # Generating image url from the prompt that was output of the prompt template and the LLM
         image_url = DallEAPIWrapper().run(prompt)
         print(image_url)
         print("passed in first attempt")
@@ -141,19 +136,19 @@ image = Image.open(image_data)
 
 display(image)
 
-# Generate a unique filename with the current date and time
-current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")
+# Generating a unique filename with the current date and time
+current_time =  datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 filename = f"images/image_{current_time}.jpg"  # The file will be saved with a .jpg extension
 
-# Save the image in the current directory with the generated filename
+# Saving the image in the current directory with the generated unique filename
+
 image.save(filename)
 
 
 
 # %%
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import textwrap
-
 
 def draw_multiline_text_with_frosted_background(image, text, position, font, text_color, shadow_color, shadow_offset, line_spacing=1.2):
     draw = ImageDraw.Draw(image)
@@ -162,9 +157,9 @@ def draw_multiline_text_with_frosted_background(image, text, position, font, tex
     x, y = position
     shadow_x, shadow_y = shadow_offset
 
-    # Estimate the size of the frosted background
-    # Assuming average character width is roughly half the font size (a rough estimation)
-    average_char_width = font.size // 1
+    # Estimating the size of the frosted background
+    # Assuming average character width is roughly equal to the font size (a rough estimation)
+    average_char_width = font.size 
     max_text_width = max(len(line) for line in lines) * average_char_width
     line_height = int(font.size * line_spacing)
     total_text_height = len(lines) * line_height
@@ -172,12 +167,12 @@ def draw_multiline_text_with_frosted_background(image, text, position, font, tex
     frosted_background_size = (max_text_width + 20, total_text_height + 10)  # Extra padding
     frosted_background_position = (x - 1, y - 1)
 
-    # Create frosted background (semi-transparent rectangle)
-    frosted_background = Image.new("RGBA", frosted_background_size, (255, 255, 255, 180))
+    # Creating frosted background (semi-transparent rectangle)
+    frosted_background = Image.new("RGBA", frosted_background_size, (255, 255, 255, 100))
     image.paste(frosted_background, frosted_background_position, frosted_background)
 
     for line in lines:
-       # Calculate x-coordinate to center the text within the frosted background
+       # Calculating x-coordinate to center the text within the frosted background
         text_bbox = draw.textbbox((0, 0), line, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         x_centered = x + (max_text_width - text_width) / 40
@@ -188,7 +183,7 @@ def draw_multiline_text_with_frosted_background(image, text, position, font, tex
         draw.text((x_centered, y), line, font=font, fill=text_color)
         y += line_height  # Increment y position by line height
 
-# Load the font
+# Loading the font
 font_path = 'fonts/fonts/DejaVuSerif-Bold.ttf'
 my_font = ImageFont.truetype(font_path, 40)
 
@@ -197,14 +192,14 @@ shadow_color = "white"
 shadow_offset = (1, 1)
 
 
-# Use the function with frosted background
+# Using the above defined function with frosted background
 draw_multiline_text_with_frosted_background(image, quote, (25, 15), my_font, 'black', shadow_color, shadow_offset)
 
-# Generate a unique filename with the current date and time
-current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+# Generating a unique filename with the current date and time
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")  
 filename = f"images/image_{current_time}.jpg"  # The file will be saved with a .jpg extension
 
-# Save the image in the current directory with the generated filename
+# Saving the image in the current directory with the generated filename
 image.save(filename)
 
 display(image)
@@ -216,7 +211,7 @@ from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import NoCredentialsError
 
-# Load API Key
+# Loading the .env variables
 load_dotenv()
 
 # AWS Credentials
@@ -234,7 +229,7 @@ s3_client = boto3.client('s3', aws_access_key_id=aws_access_key_id,
                          aws_secret_access_key=aws_secret_access_key,region_name=region_name)
 
 try:
-    # Upload the file
+    # Uploading the file
     s3_client.upload_file(file_path, bucket_name, s3_file_path)
     print("Image successfully uploaded to S3")
 except FileNotFoundError:
@@ -250,7 +245,7 @@ s3_resource = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
 s3_object = s3_resource.Object(bucket_name, s3_file_path)
 s3_url = s3_object.meta.client.generate_presigned_url('get_object',
                                                           Params={'Bucket': bucket_name, 'Key': s3_file_path},
-                                                          ExpiresIn=10000)  # URL expires in 2.5 hours
+                                                          ExpiresIn=10000)  # URL expires in ~ 2.5 hours
 print("Image URL:", s3_url)
 
 
@@ -259,7 +254,7 @@ import requests
 
 print(s3_url)
 
-# Webhook URL from Make.com
+# Webhook 
 webhook_url = os.getenv('WEBHOOK_URL')
 
 payload = {
